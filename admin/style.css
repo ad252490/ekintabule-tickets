@@ -164,3 +164,109 @@
 .pagination button:hover:not(.active) {
     background: rgba(255, 215, 0, 0.3);
 }
+
+/* ============================================
+   SCAN LOGS SECTION
+   ============================================ */
+
+.scan-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+@media (max-width: 768px) {
+    .scan-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.scan-stat {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    border: 2px solid #8B4513;
+}
+
+.scan-stat-number {
+    display: block;
+    font-size: 28px;
+    font-weight: bold;
+    color: #FFD700;
+}
+
+.scan-stat-label {
+    font-size: 12px;
+    color: #ccc;
+}
+
+.scan-stat-valid {
+    border-color: #28a745;
+}
+
+.scan-stat-valid .scan-stat-number {
+    color: #28a745;
+}
+
+.scan-stat-invalid {
+    border-color: #dc3545;
+}
+
+.scan-stat-invalid .scan-stat-number {
+    color: #dc3545;
+}
+
+.scan-stat-duplicate {
+    border-color: #ffc107;
+}
+
+.scan-stat-duplicate .scan-stat-number {
+    color: #ffc107;
+}
+
+.scan-log-entry {
+    padding: 12px 15px;
+    margin: 8px 0;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    border-left: 4px solid #8B4513;
+}
+
+.scan-log-entry.scan-valid {
+    border-left-color: #28a745;
+    background: rgba(40, 167, 69, 0.1);
+}
+
+.scan-log-entry.scan-invalid {
+    border-left-color: #dc3545;
+    background: rgba(220, 53, 69, 0.1);
+}
+
+.scan-log-entry.scan-duplicate {
+    border-left-color: #ffc107;
+    background: rgba(255, 193, 7, 0.1);
+}
+
+.scan-log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.scan-result {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.scan-time {
+    font-size: 12px;
+    color: #888;
+}
+
+.scan-log-details {
+    font-size: 14px;
+    color: #fff;
+}

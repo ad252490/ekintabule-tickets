@@ -3,24 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ticket Verification - EKINTABULE</title>
+    <title>Verify Ticket - EKINTABULE</title>
     <link rel="stylesheet" href="style.css">
-    
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
     <div class="container" id="container">
         <!-- Loading State -->
-        <div id="loadingState" class="state-card loading">
+        <div id="loadingState" class="state loading-state">
             <div class="spinner"></div>
-            <h1>Verifying Ticket...</h1>
+            <h1>Checking Ticket...</h1>
             <p>Please wait</p>
         </div>
 
         <!-- Valid Ticket -->
-        <div id="validState" class="state-card valid" style="display: none;">
+        <div id="validState" class="state valid-state" style="display: none;">
             <div class="icon">✅</div>
             <h1>VALID TICKET</h1>
             <p class="subtitle">Entry Approved!</p>
@@ -29,53 +27,44 @@
         </div>
 
         <!-- Invalid Ticket -->
-        <div id="invalidState" class="state-card invalid" style="display: none;">
+        <div id="invalidState" class="state invalid-state" style="display: none;">
             <div class="icon">❌</div>
             <h1>INVALID TICKET</h1>
             <p class="subtitle">This ticket does not exist</p>
             <div class="scanned-value" id="scannedValue"></div>
-            <button class="btn" onclick="window.close()">Close</button>
         </div>
 
         <!-- Already Used -->
-        <div id="usedState" class="state-card used" style="display: none;">
+        <div id="usedState" class="state used-state" style="display: none;">
             <div class="icon">⚠️</div>
-            <h1>ALREADY SCANNED</h1>
-            <p class="subtitle">This ticket was already used</p>
+            <h1>ALREADY USED</h1>
+            <p class="subtitle">This ticket was already scanned</p>
             <div class="ticket-info" id="usedTicketInfo"></div>
             <div class="warning-text">⚠️ Possible duplicate entry attempt</div>
         </div>
 
-        <!-- Error State -->
-        <div id="errorState" class="state-card error" style="display: none;">
-            <div class="icon">🔌</div>
-            <h1>CONNECTION ERROR</h1>
-            <p class="subtitle" id="errorMessage">Could not verify ticket</p>
+        <!-- Error/No Ticket State -->
+        <div id="errorState" class="state error-state" style="display: none;">
+            <div class="icon">🎫</div>
+            <h1>NO TICKET</h1>
+            <p class="subtitle" id="errorMessage">No ticket ID provided</p>
+            <p>Please scan a valid QR code</p>
             <button class="btn" onclick="location.reload()">Try Again</button>
         </div>
 
-        <!-- No Ticket State -->
-        <div id="noTicketState" class="state-card info" style="display: none;">
+        <!-- No Ticket State (landing page) -->
+        <div id="noTicketState" class="state error-state" style="display: none;">
             <div class="icon">🎫</div>
             <h1>EKINTABULE</h1>
             <p class="subtitle">Kya Christmas 2025</p>
             <p>Scan a ticket QR code to verify</p>
             <div class="manual-entry">
-                <input type="text" id="manualTicketId" placeholder="Enter ticket ID manually">
+                <input type="text" id="manualTicketId" placeholder="Enter ticket ID (e.g., EKC-2025-0001)">
                 <button class="btn" onclick="verifyManualTicket()">Verify</button>
             </div>
         </div>
     </div>
 
-    <!-- Audio elements for feedback -->
-    <audio id="successSound" preload="auto">
-        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ==" type="audio/wav">
-    </audio>
-    <audio id="errorSound" preload="auto">
-        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ==" type="audio/wav">
-    </audio>
-
-    <script src="../shared/firebase-config.js"></script>
     <script src="verify.js"></script>
 </body>
 </html>

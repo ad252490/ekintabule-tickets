@@ -2,6 +2,14 @@ let generatedTickets = [];
 let currentPage = 1;
 const ticketsPerPage = 20;
 
+// Base URL for verification page - update this to your GitHub Pages URL
+const VERIFICATION_BASE_URL = 'https://ad252490.github.io/ekintabule-tickets/verify/';
+
+// Generate QR code URL for a ticket
+function getVerificationUrl(ticketId) {
+    return VERIFICATION_BASE_URL + '?ticket=' + encodeURIComponent(ticketId);
+}
+
 function refreshDashboard() {
     const stats = getStats();
     const tickets = getAllTickets();
@@ -62,7 +70,7 @@ async function generateAllTickets() {
         const ticket = {
             id: ticketData.id,
             secret: ticketData.secret,
-            qrData: JSON.stringify(ticketData),
+            qrData: getVerificationUrl(ticketData.id),
             price: 10000,
             status: 'GENERATED',
             generatedAt: new Date().toISOString(),
@@ -368,4 +376,129 @@ function renderSecurityLog() {
 document.getElementById('searchTicket').addEventListener('input', function() {
     currentPage = 1;
     refreshDashboard();
+});
+
+// ============================================
+// SCAN LOGS FUNCTIONALITY
+// ============================================
+
+// Load scan logs from Firebase
+async function loadScanLogs() {
+    const container = document.getElementById('scanLogsContainer');
+    if (!container) return;
+    
+    try {
+        // Check if Firebase is available
+        if (typeof db === 'undefined' || !db) {
+            container.innerHTML = '<p style="color: #888; text-align: center;">Firebase not initialized. Scan logs unavailable.</p>';
+            return;
+        }
+        
+        const snapshot = await db.collection('scanLogs')
+            .orderBy('scannedAt', 'desc')
+            .limit(50)
+            .get();
+        
+        if (snapshot.empty) {
+            container.innerHTML = '<p style="color: #888; text-align: center;">No scans recorded yet.</p>';
+            updateScanStats(0, 0, 0);
+            return;
+        }
+        
+        let html = '';
+        let validCount = 0;
+        let invalidCount = 0;
+        let duplicateCount = 0;
+        
+        snapshot.forEach(function(doc) {
+            const log = doc.data();
+            const scannedAt = log.scannedAt && log.scannedAt.toDate ? log.scannedAt.toDate() : null;
+            const timeStr = scannedAt ? scannedAt.toLocaleString() : 'Unknown time';
+            
+            let statusClass = '';
+            let statusIcon = '';
+            
+            switch(log.result) {
+                case 'VALID':
+                    statusClass = 'scan-valid';
+                    statusIcon = '✅';
+                    validCount++;
+                    break;
+                case 'INVALID':
+                    statusClass = 'scan-invalid';
+                    statusIcon = '❌';
+                    invalidCount++;
+                    break;
+                case 'DUPLICATE':
+                    statusClass = 'scan-duplicate';
+                    statusIcon = '⚠️';
+                    duplicateCount++;
+                    break;
+                default:
+                    statusClass = '';
+                    statusIcon = '❓';
+            }
+            
+            html += '<div class="scan-log-entry ' + statusClass + '">';
+            html += '<div class="scan-log-header">';
+            html += '<span class="scan-result">' + statusIcon + ' ' + (log.result || 'UNKNOWN') + '</span>';
+            html += '<span class="scan-time">' + timeStr + '</span>';
+            html += '</div>';
+            html += '<div class="scan-log-details">';
+            html += '<strong>🎫 ' + (log.ticketId || 'Unknown Ticket') + '</strong>';
+            if (log.device) {
+                const shortDevice = log.device.length > 50 ? log.device.substring(0, 50) + '...' : log.device;
+                html += '<br><small style="color: #888;">📱 ' + shortDevice + '</small>';
+            }
+            html += '</div>';
+            html += '</div>';
+        });
+        
+        container.innerHTML = html;
+        updateScanStats(validCount, invalidCount, duplicateCount);
+        
+    } catch (error) {
+        console.error('Error loading scan logs:', error);
+        container.innerHTML = '<p style="color: #ff6b6b; text-align: center;">Error loading scan logs: ' + error.message + '</p>';
+    }
+}
+
+// Update scan stats display
+function updateScanStats(valid, invalid, duplicate) {
+    const totalScansEl = document.getElementById('totalScans');
+    const validScansEl = document.getElementById('validScans');
+    const invalidScansEl = document.getElementById('invalidScans');
+    const duplicateScansEl = document.getElementById('duplicateScans');
+    
+    if (totalScansEl) totalScansEl.textContent = valid + invalid + duplicate;
+    if (validScansEl) validScansEl.textContent = valid;
+    if (invalidScansEl) invalidScansEl.textContent = invalid;
+    if (duplicateScansEl) duplicateScansEl.textContent = duplicate;
+}
+
+// Real-time scan logs listener
+function startScanLogsListener() {
+    if (typeof db === 'undefined' || !db) return;
+    
+    try {
+        db.collection('scanLogs')
+            .orderBy('scannedAt', 'desc')
+            .limit(50)
+            .onSnapshot(function(snapshot) {
+                loadScanLogs();
+            }, function(error) {
+                console.error('Scan logs listener error:', error);
+            });
+    } catch (error) {
+        console.error('Could not start scan logs listener:', error);
+    }
+}
+
+// Initialize scan logs on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait a bit for Firebase to initialize
+    setTimeout(function() {
+        loadScanLogs();
+        startScanLogsListener();
+    }, 1000);
 });
