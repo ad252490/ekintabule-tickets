@@ -1,6 +1,14 @@
 let generatedTickets = [];
 let currentPage = 1;
 const ticketsPerPage = 20;
+let allScanLogs = [];
+let scanLogsUnsubscribe = null;
+
+// Verification URL base (update this to your actual GitHub Pages URL)
+const VERIFY_URL_BASE = 'https://ad252490.github.io/ekintabule-tickets/verify/?ticket=';
+
+// Get Firestore instance for scan logs
+const db = getFirestore();
 
 function refreshDashboard() {
     const stats = getStats();
@@ -30,6 +38,11 @@ function refreshDashboard() {
     
     renderTicketTable(tickets);
     renderSecurityLog();
+    
+    // Start real-time scan logs listener if Firebase is available
+    if (db && !scanLogsUnsubscribe) {
+        startScanLogsListener();
+    }
 }
 
 function formatNumber(num) {
@@ -59,10 +72,14 @@ async function generateAllTickets() {
     for (let i = startFrom; i <= 400; i++) {
         const ticketData = await createSecureTicket(i);
         
+        // Create verification URL for QR code (this is what gets scanned)
+        const verifyUrl = VERIFY_URL_BASE + ticketData.id;
+        
         const ticket = {
             id: ticketData.id,
             secret: ticketData.secret,
-            qrData: JSON.stringify(ticketData),
+            qrData: verifyUrl, // QR code now contains verification URL
+            qrDataBackup: JSON.stringify(ticketData), // Keep original data as backup
             price: 10000,
             status: 'GENERATED',
             generatedAt: new Date().toISOString(),
@@ -368,4 +385,143 @@ function renderSecurityLog() {
 document.getElementById('searchTicket').addEventListener('input', function() {
     currentPage = 1;
     refreshDashboard();
+});
+
+// ============================================
+// SCAN LOGS FUNCTIONS (Firebase Real-time)
+// ============================================
+
+function startScanLogsListener() {
+    if (!db) {
+        console.log('Firebase not available for scan logs');
+        return;
+    }
+    
+    try {
+        // Real-time listener for scan logs
+        scanLogsUnsubscribe = db.collection('scanLogs')
+            .orderBy('scannedAt', 'desc')
+            .limit(100)
+            .onSnapshot(function(snapshot) {
+                allScanLogs = [];
+                snapshot.forEach(function(doc) {
+                    allScanLogs.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                renderScanLogs();
+                updateScanStats();
+            }, function(error) {
+                console.error('Error listening to scan logs:', error);
+                renderScanLogsError('Could not load scan logs. Check Firebase connection.');
+            });
+    } catch (error) {
+        console.error('Error starting scan logs listener:', error);
+    }
+}
+
+function renderScanLogs() {
+    const container = document.getElementById('scanLogsContainer');
+    const filterValue = document.getElementById('filterScanResult').value;
+    
+    // Filter logs based on selected filter
+    let filteredLogs = allScanLogs;
+    if (filterValue !== 'all') {
+        filteredLogs = allScanLogs.filter(log => log.result === filterValue);
+    }
+    
+    if (filteredLogs.length === 0) {
+        container.innerHTML = '<p style="color: #888; text-align: center;">No scans match the selected filter.</p>';
+        return;
+    }
+    
+    let html = '';
+    filteredLogs.forEach(function(log, index) {
+        const resultClass = log.result ? log.result.toLowerCase() : '';
+        const isNew = index === 0 ? ' new' : '';
+        const timestamp = formatScanTimestamp(log.scannedAt);
+        const deviceInfo = getShortDeviceInfo(log.device);
+        
+        html += '<div class="scan-log-item ' + resultClass + isNew + '">';
+        html += '<div class="scan-log-info">';
+        html += '<div class="scan-log-ticket">🎫 ' + (log.ticketId || 'Unknown') + '</div>';
+        html += '<div class="scan-log-meta">';
+        html += '🕐 ' + timestamp;
+        if (deviceInfo) {
+            html += ' • 📱 ' + deviceInfo;
+        }
+        if (log.source) {
+            html += ' • 📍 ' + log.source;
+        }
+        html += '</div>';
+        html += '</div>';
+        html += '<span class="scan-log-result ' + resultClass + '">' + (log.result || 'UNKNOWN') + '</span>';
+        html += '</div>';
+    });
+    
+    container.innerHTML = html;
+}
+
+function renderScanLogsError(message) {
+    const container = document.getElementById('scanLogsContainer');
+    container.innerHTML = '<p style="color: #ff6b6b; text-align: center;">⚠️ ' + message + '</p>';
+}
+
+function updateScanStats() {
+    const total = allScanLogs.length;
+    const valid = allScanLogs.filter(log => log.result === 'VALID').length;
+    const duplicate = allScanLogs.filter(log => log.result === 'DUPLICATE').length;
+    const invalid = allScanLogs.filter(log => log.result === 'INVALID').length;
+    
+    document.getElementById('scanTotal').textContent = total;
+    document.getElementById('scanValid').textContent = valid;
+    document.getElementById('scanDuplicate').textContent = duplicate;
+    document.getElementById('scanInvalid').textContent = invalid;
+}
+
+function filterScanLogs() {
+    renderScanLogs();
+}
+
+function formatScanTimestamp(timestamp) {
+    if (!timestamp) return 'Unknown time';
+    
+    try {
+        // Handle Firestore timestamp
+        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        return date.toLocaleString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    } catch (e) {
+        return 'Unknown time';
+    }
+}
+
+function getShortDeviceInfo(userAgent) {
+    if (!userAgent) return null;
+    
+    // Extract basic device info from user agent
+    if (userAgent.includes('iPhone')) return 'iPhone';
+    if (userAgent.includes('iPad')) return 'iPad';
+    if (userAgent.includes('Android')) {
+        const match = userAgent.match(/Android\s[\d.]+/);
+        return match ? match[0] : 'Android';
+    }
+    if (userAgent.includes('Windows')) return 'Windows';
+    if (userAgent.includes('Mac')) return 'Mac';
+    if (userAgent.includes('Linux')) return 'Linux';
+    
+    return 'Browser';
+}
+
+// Cleanup listener on page unload
+window.addEventListener('beforeunload', function() {
+    if (scanLogsUnsubscribe) {
+        scanLogsUnsubscribe();
+    }
 });

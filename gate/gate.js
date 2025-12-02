@@ -1,22 +1,10 @@
 // ============================================
 // FIREBASE CONFIGURATION
 // ============================================
-// Replace these with your actual Firebase config from:
-// Firebase Console → Project Settings → Your apps → Web app
-const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID. appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
-};
+// Firebase config is loaded from shared/firebase-config.js
 
-// Initialize Firebase
-if (!firebase. apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-const db = firebase.firestore();
+// Get Firestore instance from shared config
+const db = getFirestore();
 
 // ============================================
 // QR SCANNER VARIABLES
@@ -206,14 +194,41 @@ async function validateTicket(scannedData) {
         let ticketId = scannedData;
         let ticketData = null;
         
-        // Try to parse as JSON (if QR contains JSON data)
-        try {
-            const parsed = JSON.parse(scannedData);
-            ticketId = parsed.id || parsed. ticketId || scannedData;
-            ticketData = parsed;
-        } catch (e) {
-            // Not JSON, use as-is (probably just ticket ID)
-            ticketId = scannedData;
+        // Check if scanned data is a verification URL
+        if (scannedData.includes('/verify/') || scannedData.includes('?ticket=')) {
+            // Extract ticket ID from URL
+            try {
+                const url = new URL(scannedData);
+                ticketId = url.searchParams.get('ticket') || url.searchParams.get('id');
+                if (!ticketId) {
+                    // Try to extract from path
+                    const pathMatch = scannedData.match(/EKC-\d{4}-\d{4}/i);
+                    if (pathMatch) {
+                        ticketId = pathMatch[0];
+                    }
+                }
+            } catch (e) {
+                // URL parsing failed, try regex
+                const match = scannedData.match(/ticket=([^&]+)/i);
+                if (match) {
+                    ticketId = match[1];
+                }
+            }
+        } else {
+            // Try to parse as JSON (if QR contains JSON data)
+            try {
+                const parsed = JSON.parse(scannedData);
+                ticketId = parsed.id || parsed.ticketId || scannedData;
+                ticketData = parsed;
+            } catch (e) {
+                // Not JSON, use as-is (probably just ticket ID)
+                ticketId = scannedData;
+            }
+        }
+        
+        // Clean up ticket ID
+        if (ticketId) {
+            ticketId = ticketId.trim().toUpperCase();
         }
         
         console.log('Looking up ticket:', ticketId);

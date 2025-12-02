@@ -164,3 +164,119 @@
 .pagination button:hover:not(.active) {
     background: rgba(255, 215, 0, 0.3);
 }
+
+/* Scan Logs Styles */
+.scan-stats {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.scan-stat {
+    padding: 8px 15px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 8px;
+    color: #ccc;
+    font-size: 14px;
+}
+
+.scan-stat strong {
+    color: #FFD700;
+}
+
+.scan-stat.valid {
+    border-left: 3px solid #28a745;
+}
+
+.scan-stat.duplicate {
+    border-left: 3px solid #ffc107;
+}
+
+.scan-stat.invalid {
+    border-left: 3px solid #dc3545;
+}
+
+.scan-log-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    margin: 8px 0;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    border-left: 4px solid #8B4513;
+    transition: all 0.2s ease;
+}
+
+.scan-log-item:hover {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.scan-log-item.valid {
+    border-left-color: #28a745;
+    background: rgba(40, 167, 69, 0.15);
+}
+
+.scan-log-item.duplicate {
+    border-left-color: #ffc107;
+    background: rgba(255, 193, 7, 0.15);
+}
+
+.scan-log-item.invalid {
+    border-left-color: #dc3545;
+    background: rgba(220, 53, 69, 0.15);
+}
+
+.scan-log-info {
+    flex: 1;
+}
+
+.scan-log-ticket {
+    color: #FFD700;
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.scan-log-meta {
+    color: #888;
+    font-size: 12px;
+}
+
+.scan-log-result {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.scan-log-result.valid {
+    background: #28a745;
+    color: #fff;
+}
+
+.scan-log-result.duplicate {
+    background: #ffc107;
+    color: #000;
+}
+
+.scan-log-result.invalid {
+    background: #dc3545;
+    color: #fff;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.scan-log-item.new {
+    animation: slideIn 0.3s ease-out;
+}

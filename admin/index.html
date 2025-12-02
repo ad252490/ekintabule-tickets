@@ -6,6 +6,11 @@
     <title>Admin Dashboard - EKINTABULE</title>
     <link rel="stylesheet" href="../shared/styles.css">
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
@@ -123,6 +128,27 @@
         </div>
 
         <div class="card">
+            <div class="card-header">📱 Scan Logs (Real-time)</div>
+            <div style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                <div class="scan-stats">
+                    <span class="scan-stat">Total: <strong id="scanTotal">0</strong></span>
+                    <span class="scan-stat valid">Valid: <strong id="scanValid">0</strong></span>
+                    <span class="scan-stat duplicate">Duplicate: <strong id="scanDuplicate">0</strong></span>
+                    <span class="scan-stat invalid">Invalid: <strong id="scanInvalid">0</strong></span>
+                </div>
+                <select id="filterScanResult" onchange="filterScanLogs()" style="padding: 10px; border-radius: 8px; border: 2px solid #8B4513; background: rgba(0,0,0,0.5); color: #fff;">
+                    <option value="all">All Results</option>
+                    <option value="VALID">Valid Only</option>
+                    <option value="DUPLICATE">Duplicate Only</option>
+                    <option value="INVALID">Invalid Only</option>
+                </select>
+            </div>
+            <div id="scanLogsContainer" style="max-height: 400px; overflow-y: auto;">
+                <p style="color: #888; text-align: center;">No scans recorded yet. Scans will appear here in real-time.</p>
+            </div>
+        </div>
+
+        <div class="card">
             <div class="card-header">🔐 Security Log</div>
             <div id="securityLog">
                 <p style="color: #888; text-align: center;">No security events recorded.</p>
@@ -135,6 +161,7 @@
     <script src="../shared/auth.js"></script>
     <script src="../shared/security.js"></script>
     <script src="../shared/database.js"></script>
+    <script src="../shared/firebase-config.js"></script>
     <script src="admin.js"></script>
     <script>
         if (!checkAuth('admin')) {
