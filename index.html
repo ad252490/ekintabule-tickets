@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EKINTABULE Kya Christmas - Ticket System</title>
+    <link rel="stylesheet" href="shared/styles.css">
+    <style>
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a0a0a 0%, #3d1a1a 50%, #1a0a0a 100%);
+        }
+        .login-box {
+            background: rgba(139, 69, 19, 0.3);
+            border: 2px solid #FFD700;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+        }
+        .login-box h1 {
+            color: #FFD700;
+            font-size: 28px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        .login-box h2 {
+            color: #FF6B35;
+            font-size: 18px;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid #8B4513;
+            border-radius: 10px;
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .login-box input:focus {
+            border-color: #FFD700;
+            outline: none;
+        }
+        .login-box button {
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            background: linear-gradient(135deg, #FF6B35 0%, #FFD700 100%);
+            border: none;
+            border-radius: 10px;
+            color: #1a0a0a;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .login-box button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 107, 53, 0.5);
+        }
+        .error-msg {
+            color: #ff4444;
+            margin-top: 15px;
+            display: none;
+        }
+        .event-details {
+            color: #ccc;
+            margin-top: 30px;
+            font-size: 14px;
+        }
+        .event-details p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <h1>🎄 EKINTABULE</h1>
+            <h2>Kya Christmas</h2>
+            
+            <form id="loginForm">
+                <input type="password" id="password" placeholder="Enter Password" required>
+                <button type="submit">🔐 Login</button>
+            </form>
+            
+            <p class="error-msg" id="errorMsg">❌ Invalid password. Try again.</p>
+            
+            <div class="event-details">
+                <p>📅 25th December 2025</p>
+                <p>📍 Club Missouka, Kijabijo</p>
+                <p>🎫 Ticket Management System</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="shared/auth.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const password = document.getElementById('password').value;
+            const result = authenticate(password);
+            
+            if (result === 'admin') {
+                window.location.href = 'admin/index.html';
+            } else if (result === 'gate') {
+                window.location.href = 'gate/index.html';
+            } else {
+                document.getElementById('errorMsg').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('errorMsg').style.display = 'none';
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>
