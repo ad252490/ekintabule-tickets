@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - EKINTABULE</title>
+    <link rel="stylesheet" href="../shared/styles.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>👑 ADMIN DASHBOARD</h1>
+            <span class="subtitle">EKINTABULE Kya Christmas</span>
+        </div>
+        <div>
+            <span style="color: #ccc; margin-right: 15px;">📅 25th Dec 2025 | 📍 Club Missouka</span>
+            <button class="btn btn-secondary" onclick="logout()">🚪 Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="number" id="statGenerated">0</div>
+                <div class="label">📦 Generated</div>
+            </div>
+            <div class="stat-box">
+                <div class="number" id="statDownloaded">0</div>
+                <div class="label">📥 Downloaded</div>
+            </div>
+            <div class="stat-box">
+                <div class="number" id="statSold">0</div>
+                <div class="label">💰 Sold</div>
+            </div>
+            <div class="stat-box success">
+                <div class="number" id="statUsed">0</div>
+                <div class="label">✅ Scanned</div>
+            </div>
+            <div class="stat-box warning">
+                <div class="number" id="statRevenue">0</div>
+                <div class="label">💵 Revenue (UGX)</div>
+            </div>
+            <div class="stat-box danger">
+                <div class="number" id="statFraud">0</div>
+                <div class="label">🚨 Fraud Blocked</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">🎫 Ticket Generation</div>
+            <div class="generation-controls">
+                <p style="margin-bottom: 15px; color: #ccc;">Generate 400 unique tickets with encrypted QR codes for EKINTABULE Kya Christmas.</p>
+                <div class="progress-bar" id="progressContainer" style="display: none;">
+                    <div class="fill" id="progressFill" style="width: 0%;"></div>
+                </div>
+                <p id="progressText" style="text-align: center; margin: 10px 0; display: none;"></p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" id="generateBtn" onclick="generateAllTickets()">🎫 Generate 400 Tickets</button>
+                    <button class="btn btn-secondary" id="downloadZipBtn" onclick="downloadAsZip()" disabled>📥 Download ZIP (PNG)</button>
+                    <button class="btn btn-secondary" id="downloadPdfBtn" onclick="downloadAsPdf()" disabled>📄 Download PDF</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">💰 Revenue Tracking</div>
+            <div class="revenue-grid">
+                <div class="revenue-item">
+                    <span class="revenue-label">Total Tickets:</span>
+                    <span class="revenue-value">400 × 10,000 UGX = <strong>4,000,000 UGX</strong></span>
+                </div>
+                <div class="revenue-item">
+                    <span class="revenue-label">Tickets Sold:</span>
+                    <span class="revenue-value" id="soldRevenue">0 × 10,000 UGX = 0 UGX</span>
+                </div>
+                <div class="revenue-item">
+                    <span class="revenue-label">Attendance:</span>
+                    <span class="revenue-value" id="attendanceRate">0 / 0 (0%)</span>
+                </div>
+                <div class="revenue-item highlight">
+                    <span class="revenue-label">💵 Expected Collection:</span>
+                    <span class="revenue-value" id="expectedCollection">0 UGX</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">📋 Ticket Management</div>
+            <div style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <input type="text" id="searchTicket" placeholder="Search ticket ID..." style="padding: 10px; border-radius: 8px; border: 2px solid #8B4513; background: rgba(0,0,0,0.5); color: #fff; flex: 1; min-width: 200px;">
+                <select id="filterStatus" onchange="filterTickets()" style="padding: 10px; border-radius: 8px; border: 2px solid #8B4513; background: rgba(0,0,0,0.5); color: #fff;">
+                    <option value="all">All Status</option>
+                    <option value="GENERATED">Generated</option>
+                    <option value="DOWNLOADED">Downloaded</option>
+                    <option value="SOLD">Sold</option>
+                    <option value="USED">Used</option>
+                </select>
+                <button class="btn btn-primary" onclick="exportReport()">📊 Export CSV</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table id="ticketTable">
+                    <thead>
+                        <tr>
+                            <th>Ticket ID</th>
+                            <th>Status</th>
+                            <th>Generated</th>
+                            <th>Scanned At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ticketTableBody">
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: #888;">No tickets generated yet. Click "Generate 400 Tickets" to start.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">🔐 Security Log</div>
+            <div id="securityLog">
+                <p style="color: #888; text-align: center;">No security events recorded.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="ticketCanvas" style="position: absolute; left: -9999px;"></div>
+
+    <script src="../shared/auth.js"></script>
+    <script src="../shared/security.js"></script>
+    <script src="../shared/database.js"></script>
+    <script src="admin.js"></script>
+    <script>
+        if (!checkAuth('admin')) {
+            window.location.href = '../index.html';
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshDashboard();
+        });
+    </script>
+</body>
+</html>
