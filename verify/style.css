@@ -1,0 +1,339 @@
+/* ============================================
+   VERIFICATION PAGE STYLES
+   Full-screen colored backgrounds for each state
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+html, body {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ============================================
+   STATE CARDS - Full screen backgrounds
+   ============================================ */
+
+.state {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Loading State - Gray */
+.loading-state {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 50%, #343a40 100%);
+    color: #fff;
+}
+
+/* Valid State - Green */
+.valid-state {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 50%, #28a745 100%);
+    color: #fff;
+    animation: pulseGreen 2s ease-in-out infinite;
+}
+
+@keyframes pulseGreen {
+    0%, 100% { box-shadow: inset 0 0 100px rgba(0, 255, 0, 0.2); }
+    50% { box-shadow: inset 0 0 100px rgba(0, 255, 0, 0.4); }
+}
+
+/* Invalid State - Red */
+.invalid-state {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 50%, #dc3545 100%);
+    color: #fff;
+    animation: pulseRed 2s ease-in-out infinite;
+}
+
+@keyframes pulseRed {
+    0%, 100% { box-shadow: inset 0 0 100px rgba(255, 0, 0, 0.2); }
+    50% { box-shadow: inset 0 0 100px rgba(255, 0, 0, 0.4); }
+}
+
+/* Already Used State - Yellow/Orange */
+.used-state {
+    background: linear-gradient(135deg, #ffc107 0%, #ff8c00 50%, #ffc107 100%);
+    color: #000;
+    animation: pulseYellow 2s ease-in-out infinite;
+}
+
+@keyframes pulseYellow {
+    0%, 100% { box-shadow: inset 0 0 100px rgba(255, 193, 7, 0.2); }
+    50% { box-shadow: inset 0 0 100px rgba(255, 193, 7, 0.4); }
+}
+
+/* Error State - Blue/Gray */
+.error-state {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 50%, #117a8b 100%);
+    color: #fff;
+}
+
+/* ============================================
+   ICONS - Large and prominent
+   ============================================ */
+
+.icon {
+    font-size: 120px;
+    margin-bottom: 20px;
+    animation: iconBounce 0.5s ease-out;
+}
+
+@keyframes iconBounce {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+/* ============================================
+   TYPOGRAPHY - Large, mobile-optimized
+   ============================================ */
+
+h1 {
+    font-size: 48px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    letter-spacing: 2px;
+}
+
+.subtitle {
+    font-size: 24px;
+    margin-bottom: 30px;
+    opacity: 0.9;
+}
+
+p {
+    font-size: 18px;
+    margin: 10px 0;
+}
+
+/* ============================================
+   TICKET INFO BOX
+   ============================================ */
+
+.ticket-info {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    padding: 20px 30px;
+    margin-top: 20px;
+    min-width: 280px;
+    max-width: 400px;
+    text-align: left;
+    backdrop-filter: blur(5px);
+}
+
+.ticket-info p {
+    font-size: 16px;
+    margin: 8px 0;
+    display: flex;
+    justify-content: space-between;
+}
+
+.ticket-info strong {
+    font-weight: bold;
+}
+
+.ticket-info .ticket-id {
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================
+   LOADING SPINNER
+   ============================================ */
+
+.spinner {
+    width: 80px;
+    height: 80px;
+    border: 8px solid rgba(255, 255, 255, 0.3);
+    border-top: 8px solid #fff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 30px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+.btn {
+    padding: 15px 40px;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    margin-top: 20px;
+    background: rgba(255, 255, 255, 0.3);
+    color: inherit;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.btn:hover {
+    background: rgba(255, 255, 255, 0.5);
+    transform: scale(1.05);
+}
+
+.btn:active {
+    transform: scale(0.95);
+}
+
+/* ============================================
+   MANUAL ENTRY
+   ============================================ */
+
+.manual-entry {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.manual-entry input {
+    padding: 15px 20px;
+    font-size: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    text-align: center;
+    width: 280px;
+}
+
+.manual-entry input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.manual-entry input:focus {
+    outline: none;
+    border-color: #fff;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================
+   TIMESTAMP
+   ============================================ */
+
+.timestamp {
+    margin-top: 20px;
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+/* ============================================
+   WARNING TEXT
+   ============================================ */
+
+.warning-text {
+    margin-top: 20px;
+    font-size: 20px;
+    font-weight: bold;
+    padding: 15px 25px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+}
+
+/* ============================================
+   SCANNED VALUE (for invalid tickets)
+   ============================================ */
+
+.scanned-value {
+    margin: 20px 0;
+    font-size: 14px;
+    opacity: 0.8;
+    word-break: break-all;
+    max-width: 300px;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 480px) {
+    .icon {
+        font-size: 80px;
+    }
+    
+    h1 {
+        font-size: 32px;
+    }
+    
+    .subtitle {
+        font-size: 18px;
+    }
+    
+    p {
+        font-size: 16px;
+    }
+    
+    .ticket-info {
+        min-width: auto;
+        width: 90%;
+        padding: 15px 20px;
+    }
+    
+    .ticket-info p {
+        font-size: 14px;
+    }
+    
+    .btn {
+        padding: 12px 30px;
+        font-size: 16px;
+    }
+    
+    .spinner {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .manual-entry input {
+        width: 90%;
+        max-width: 280px;
+    }
+}
+
+/* ============================================
+   DARK MODE SUPPORT
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+    .used-state {
+        color: #000;
+    }
+}

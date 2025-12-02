@@ -123,6 +123,32 @@
         </div>
 
         <div class="card">
+            <div class="card-header">📊 Scan Activity (Real-time)</div>
+            <div class="scan-stats-grid">
+                <div class="scan-stat">
+                    <span class="scan-stat-number" id="totalScans">0</span>
+                    <span class="scan-stat-label">Total Scans</span>
+                </div>
+                <div class="scan-stat scan-stat-valid">
+                    <span class="scan-stat-number" id="validScans">0</span>
+                    <span class="scan-stat-label">✅ Valid</span>
+                </div>
+                <div class="scan-stat scan-stat-invalid">
+                    <span class="scan-stat-number" id="invalidScans">0</span>
+                    <span class="scan-stat-label">❌ Invalid</span>
+                </div>
+                <div class="scan-stat scan-stat-duplicate">
+                    <span class="scan-stat-number" id="duplicateScans">0</span>
+                    <span class="scan-stat-label">⚠️ Duplicates</span>
+                </div>
+            </div>
+            <div class="card-header" style="margin-top: 15px;">📋 Recent Scans</div>
+            <div id="scanLogsContainer" style="max-height: 400px; overflow-y: auto;">
+                <p style="color: #888; text-align: center;">Loading scan logs...</p>
+            </div>
+        </div>
+
+        <div class="card">
             <div class="card-header">🔐 Security Log</div>
             <div id="securityLog">
                 <p style="color: #888; text-align: center;">No security events recorded.</p>
@@ -132,6 +158,10 @@
 
     <div id="ticketCanvas" style="position: absolute; left: -9999px;"></div>
 
+    <!-- Firebase SDK for real-time scan logs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="../shared/firebase-config.js"></script>
     <script src="../shared/auth.js"></script>
     <script src="../shared/security.js"></script>
     <script src="../shared/database.js"></script>
