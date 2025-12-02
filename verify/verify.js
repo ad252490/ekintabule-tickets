@@ -3,21 +3,11 @@
 // For third-party QR scanner apps
 // ============================================
 
-// Firebase Configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyCLFyj3DrojzT3WJ7adgbcR89HuMOm-V4E",
-    authDomain: "ekintabule-tickets.firebaseapp.com",
-    projectId: "ekintabule-tickets",
-    storageBucket: "ekintabule-tickets.firebasestorage.app",
-    messagingSenderId: "886000786154",
-    appId: "1:886000786154:web:0e21db5eb8b5b71d5dd593"
-};
+// Firebase is initialized via shared/firebase-config.js included in index.html
+// The 'db' variable is defined there
 
-// Initialize Firebase
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-const db = firebase.firestore();
+// Constants
+const USER_AGENT_MAX_LENGTH = 150;
 
 // ============================================
 // STATE MANAGEMENT
@@ -178,7 +168,7 @@ async function logScan(ticketId, result, ticketData) {
             result: result,
             ticketData: ticketData,
             scannedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            device: navigator.userAgent.substring(0, 150),
+            device: navigator.userAgent.substring(0, USER_AGENT_MAX_LENGTH),
             scannedBy: 'verification-page'
         });
         console.log('Scan logged:', result);

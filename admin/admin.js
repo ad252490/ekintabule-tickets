@@ -2,8 +2,20 @@ let generatedTickets = [];
 let currentPage = 1;
 const ticketsPerPage = 20;
 
-// Base URL for verification page - update this to your GitHub Pages URL
-const VERIFICATION_BASE_URL = 'https://ad252490.github.io/ekintabule-tickets/verify/';
+// Constants
+const DEVICE_STRING_MAX_LENGTH = 50;
+
+// Base URL for verification page - automatically detected from current location or fallback to GitHub Pages
+function getBaseUrl() {
+    // If running on GitHub Pages or production, use the current origin
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        return window.location.origin + '/ekintabule-tickets/verify/';
+    }
+    // Fallback to GitHub Pages URL
+    return 'https://ad252490.github.io/ekintabule-tickets/verify/';
+}
+
+const VERIFICATION_BASE_URL = getBaseUrl();
 
 // Generate QR code URL for a ticket
 function getVerificationUrl(ticketId) {
@@ -447,7 +459,7 @@ async function loadScanLogs() {
             html += '<div class="scan-log-details">';
             html += '<strong>🎫 ' + (log.ticketId || 'Unknown Ticket') + '</strong>';
             if (log.device) {
-                const shortDevice = log.device.length > 50 ? log.device.substring(0, 50) + '...' : log.device;
+                const shortDevice = log.device.length > DEVICE_STRING_MAX_LENGTH ? log.device.substring(0, DEVICE_STRING_MAX_LENGTH) + '...' : log.device;
                 html += '<br><small style="color: #888;">📱 ' + shortDevice + '</small>';
             }
             html += '</div>';
@@ -494,11 +506,19 @@ function startScanLogsListener() {
     }
 }
 
-// Initialize scan logs on page load
-document.addEventListener('DOMContentLoaded', function() {
-    // Wait a bit for Firebase to initialize
-    setTimeout(function() {
+// Check if Firebase is ready and initialize scan logs
+function initScanLogs() {
+    // Check if Firebase db is available
+    if (typeof db !== 'undefined' && db) {
         loadScanLogs();
         startScanLogsListener();
-    }, 1000);
+    } else {
+        // Retry after a short delay if Firebase isn't ready yet
+        setTimeout(initScanLogs, 500);
+    }
+}
+
+// Initialize scan logs on page load
+document.addEventListener('DOMContentLoaded', function() {
+    initScanLogs();
 });
