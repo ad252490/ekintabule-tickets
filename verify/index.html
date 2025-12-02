@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Verify Ticket - EKINTABULE</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <div class="verify-container">
+        <div class="verify-header">
+            <h1>🎄 EKINTABULE</h1>
+            <h2>Kya Christmas 2025</h2>
+        </div>
+        
+        <div id="resultCard" class="result-card loading">
+            <div class="result-icon" id="resultIcon">⏳</div>
+            <div class="result-title" id="resultTitle">Checking Ticket...</div>
+            <div class="result-message" id="resultMessage">Please wait while we verify your ticket.</div>
+            <div class="ticket-info" id="ticketInfo" style="display: none;"></div>
+        </div>
+        
+        <div class="event-info">
+            <p>📅 25th December 2025</p>
+            <p>📍 Club Missouka, Kijabijo</p>
+            <p>💰 10,000 UGX</p>
+        </div>
+    </div>
+
+    <!-- Audio elements for feedback -->
+    <audio id="successSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2Onp6ciHlxe4eTn5+YjHt0e4iWoJ+WiXt1fIqZop+UhHh2foycoZ2Qf3V4gI+eoJuLfHV6hJOen5iFd3Z8i5mgnZB+dHmEk5+gmIV2dnuLmZ+ckX50eYWUn5+Xg3V2fIyZn5yQfXR5hZSfn5eDdXZ8jJmfnJB9dHmFlJ+fl4N1dnyMmZ+ckH10eYWUn5+Xg3V2fIyZn5yQfXR5hZSfn5eDdXZ8jJmfnJB9dA==" type="audio/wav">
+    </audio>
+    <audio id="errorSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRl9vAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTtvAACA/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/" type="audio/wav">
+    </audio>
+
+    <script src="../shared/firebase-config.js"></script>
+    <script src="verify.js"></script>
+</body>
+</html>
