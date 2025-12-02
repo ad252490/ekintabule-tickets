@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gate Scanner - EKINTABULE</title>
+    <link rel="stylesheet" href="../shared/styles.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>🚪 GATE SCANNER</h1>
+            <span class="subtitle">EKINTABULE Kya Christmas</span>
+        </div>
+        <button class="btn btn-secondary" onclick="logout()">🚪 Logout</button>
+    </div>
+
+    <div class="container">
+        <div class="card scanner-card">
+            <div class="card-header">📷 Scan Ticket QR Code</div>
+            <div id="scanner-container">
+                <div id="reader"></div>
+            </div>
+            <div class="scanner-controls">
+                <button class="btn btn-primary" id="startBtn" onclick="startScanner()">📷 Start Camera</button>
+                <button class="btn btn-danger" id="stopBtn" onclick="stopScanner()" style="display: none;">⏹️ Stop Camera</button>
+            </div>
+        </div>
+
+        <div class="card result-card" id="resultCard" style="display: none;">
+            <div id="resultContent"></div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box success">
+                <div class="number" id="scannedCount">0</div>
+                <div class="label">✅ Scanned In</div>
+            </div>
+            <div class="stat-box">
+                <div class="number" id="totalTickets">0</div>
+                <div class="label">🎫 Total Sold</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">🕐 Recent Scans</div>
+            <div id="recentScans">
+                <p style="color: #888; text-align: center;">No scans yet. Start scanning tickets!</p>
+            </div>
+        </div>
+    </div>
+
+    <audio id="successSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2Onp6ciHlxe4eTn5+YjHt0e4iWoJ+WiXt1fIqZop+UhHh2foycoZ2Qf3V4gI+eoJuLfHV6hJOen5iFd3Z8i5mgnZB+dHmEk5+gmIV2dnuLmZ+ckX50eYWUn5+Xg3V2fIyZn5yQfXR5hZSfn5eDdXZ8jJmfnJB9dHmFlJ+fl4N1dnyMmZ+ckH10eYWUn5+Xg3V2fIyZn5yQfXR5hZSfn5eDdXZ8jJmfnJB9dA==" type="audio/wav">
+    </audio>
+    <audio id="errorSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRl9vAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTtvAACA/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/" type="audio/wav">
+    </audio>
+
+    <script src="../shared/auth.js"></script>
+    <script src="../shared/security.js"></script>
+    <script src="../shared/database.js"></script>
+    <script src="gate.js"></script>
+    <script>
+        if (!checkAuth('gate')) {
+            window.location.href = '../index.html';
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshGateStats();
+        });
+    </script>
+</body>
+</html>
