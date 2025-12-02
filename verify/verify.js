@@ -4,14 +4,17 @@
 // This page validates tickets scanned by third-party QR apps
 // URL format: https://site.com/verify/?ticket=EKC-2025-0001
 
-// Get Firestore instance
-const db = getFirestore();
+// Firestore instance (initialized on DOMContentLoaded)
+let db = null;
 
 // ============================================
 // MAIN VERIFICATION LOGIC
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Firestore
+    db = getFirestore();
+    
     // Parse ticket ID from URL
     const urlParams = new URLSearchParams(window.location.search);
     let ticketId = urlParams.get('ticket');
@@ -53,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // ============================================
 
 function isValidTicketFormat(ticketId) {
-    // Accept formats like EKC-2025-0001 or EKC-2025-0001
+    // Accept ticket ID format: EKC-YYYY-NNNN (e.g., EKC-2025-0001)
     const regex = /^EKC-\d{4}-\d{4}$/i;
     return regex.test(ticketId);
 }

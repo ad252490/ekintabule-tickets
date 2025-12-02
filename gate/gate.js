@@ -3,8 +3,8 @@
 // ============================================
 // Firebase config is loaded from shared/firebase-config.js
 
-// Get Firestore instance from shared config
-const db = getFirestore();
+// Firestore instance (initialized on DOMContentLoaded)
+let db = null;
 
 // ============================================
 // QR SCANNER VARIABLES
@@ -496,8 +496,11 @@ function playErrorBeep() {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Firestore
+    db = getFirestore();
+    
     console.log('🚪 Gate Scanner Loaded');
-    console.log('Firebase initialized:', !!firebase. apps.length);
+    console.log('Firebase initialized:', !!firebase.apps.length);
     
     // Refresh stats on load
     refreshGateStats();

@@ -7,10 +7,15 @@ let scanLogsUnsubscribe = null;
 // Verification URL base (update this to your actual GitHub Pages URL)
 const VERIFY_URL_BASE = 'https://ad252490.github.io/ekintabule-tickets/verify/?ticket=';
 
-// Get Firestore instance for scan logs
-const db = getFirestore();
+// Firestore instance (initialized on DOMContentLoaded via refreshDashboard)
+let db = null;
 
 function refreshDashboard() {
+    // Initialize Firestore if not already done
+    if (!db) {
+        db = getFirestore();
+    }
+    
     const stats = getStats();
     const tickets = getAllTickets();
     
