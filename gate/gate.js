@@ -1,235 +1,20 @@
-// Firebase configuration - Replace with your actual config
-const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID. appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
-};
-
-// Initialize Firebase
-firebase. initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-// DOM Elements
-const resultSection = document.getElementById('resultSection');
-const resultIcon = document.getElementById('resultIcon');
-const resultMessage = document.getElementById('resultMessage');
-const ticketDetails = document.getElementById('ticketDetails');
-const loadingSection = document.getElementById('loading');
-const manualInput = document.getElementById('manualInput');
-const totalTickets = document. getElementById('totalTickets');
-const usedTickets = document.getElementById('usedTickets');
-const remainingTickets = document.getElementById('remainingTickets');
-
-let html5QrcodeScanner = null;
-
-// Initialize QR Scanner
-function initScanner() {
-    html5QrcodeScanner = new Html5QrcodeScanner(
-        "reader",
-        { 
-            fps: 10, 
-            qrbox: { width: 250, height: 250 },
-            aspectRatio: 1. 0
-        },
-        false
-    );
-    
-    html5QrcodeScanner. render(onScanSuccess, onScanFailure);
-}
-
-// Handle successful scan
-function onScanSuccess(decodedText, decodedResult) {
-    // Play a beep sound
-    playBeep();
-    
-    // Pause scanner while processing
-    html5QrcodeScanner.pause();
-    
-    // Validate the ticket
-    validateTicket(decodedText);
-}
-
-// Handle scan failure (usually just means no QR code detected yet)
-function onScanFailure(error) {
-    // Silently ignore - this fires continuously when no QR code is in view
-}
-
-// Manual ticket entry
-function checkManualTicket() {
-    const ticketId = manualInput.value.trim();
-    if (ticketId) {
-        validateTicket(ticketId);
-        manualInput.value = '';
-    }
-}
-
-// Allow Enter key for manual input
-document.addEventListener('DOMContentLoaded', function() {
-    initScanner();
-    updateStats();
-    
-    manualInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            checkManualTicket();
-        }
-    });
-});
-
-// Validate ticket against Firebase
-async function validateTicket(ticketId) {
-    showLoading(true);
-    hideResult();
-    
-    try {
-        const ticketRef = db.collection('tickets').doc(ticketId);
-        const ticketDoc = await ticketRef.get();
-        
-        if (!ticketDoc. exists) {
-            showResult('error', 'Invalid Ticket', 'This ticket does not exist in the system.');
-            return;
-        }
-        
-        const ticketData = ticketDoc.data();
-        
-        if (ticketData.used) {
-            showResult('already-used', 'Ticket Already Used', 
-                `This ticket was used on ${formatDate(ticketData.usedAt?. toDate())}`, ticketData);
-            return;
-        }
-        
-        // Mark ticket as used
-        await ticketRef.update({
-            used: true,
-            usedAt: firebase.firestore. FieldValue.serverTimestamp(),
-            usedBy: 'gate-scanner'
-        });
-        
-        showResult('success', 'Valid Ticket ✓', 'Entry Approved!', ticketData);
-        updateStats();
-        
-    } catch (error) {
-        console.error('Error validating ticket:', error);
-        showResult('error', 'Error', 'Could not validate ticket. Please try again.');
-    } finally {
-        showLoading(false);
-    }
-}
-
-// Show result with appropriate styling
-function showResult(type, title, message, ticketData = null) {
-    resultSection.className = `result-section ${type}`;
-    resultSection.style.display = 'block';
-    
-    const icons = {
-        'success': '✅',
-        'error': '❌',
-        'already-used': '⚠️'
-    };
-    
-    resultIcon.textContent = icons[type] || '❓';
-    resultMessage.textContent = title;
-    
-    let detailsHtml = `<p>${message}</p>`;
-    
-    if (ticketData) {
-        detailsHtml += `
-            <div class="ticket-details">
-                <p><strong>Name:</strong> ${ticketData.name || 'N/A'}</p>
-                <p><strong>Email:</strong> ${ticketData.email || 'N/A'}</p>
-                <p><strong>Ticket Type:</strong> ${ticketData.ticketType || 'Standard'}</p>
-                <p><strong>Purchase Date:</strong> ${formatDate(ticketData.purchaseDate?. toDate())}</p>
-            </div>
-        `;
-    }
-    
-    ticketDetails.innerHTML = detailsHtml;
-}
-
-// Hide result section
-function hideResult() {
-    resultSection.style.display = 'none';
-    resultSection.className = 'result-section';
-}
-
-// Show/hide loading spinner
-function showLoading(show) {
-    loadingSection.className = show ? 'loading show' : 'loading';
-}
-
-// Reset scanner for next scan
-function scanAgain() {
-    hideResult();
-    if (html5QrcodeScanner) {
-        html5QrcodeScanner. resume();
-    }
-}
-
-// Update statistics
-async function updateStats() {
-    try {
-        const ticketsSnapshot = await db.collection('tickets').get();
-        const total = ticketsSnapshot. size;
-        let used = 0;
-        
-        ticketsSnapshot. forEach(doc => {
-            if (doc.data().used) {
-                used++;
-            }
-        });
-        
-        totalTickets.textContent = total;
-        usedTickets.textContent = used;
-        remainingTickets.textContent = total - used;
-        
-    } catch (error) {
-        console. error('Error updating stats:', error);
-    }
-}
-
-// Format date helper
-function formatDate(date) {
-    if (!date) return 'N/A';
-    return new Intl.DateTimeFormat('en-US', {
-        dateStyle: 'medium',
-        timeStyle: 'short'
-    }).format(date);
-}
-
-// Play beep sound on scan
-function playBeep() {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.frequency. value = 800;
-    oscillator.type = 'sine';
-    gainNode.gain.value = 0.3;
-    
-    oscillator.start();
-    oscillator. stop(audioContext. currentTime + 0.15);
-}
 // QR Scanner variables
 let html5QrCode = null;
 let isScanning = false;
 
-// DOM Elements
+// DOM Elements - These match your index.html
 const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 const resultCard = document.getElementById('resultCard');
 const resultContent = document.getElementById('resultContent');
-const scannedCount = document.getElementById('scannedCount');
-const totalTicketsEl = document.getElementById('totalTickets');
+const scannedCountEl = document.getElementById('scannedCount');
+const totalTicketsEl = document. getElementById('totalTickets');
 const recentScans = document.getElementById('recentScans');
 
 // Start QR Scanner
 async function startScanner() {
     try {
+        // Create scanner instance
         html5QrCode = new Html5Qrcode("reader");
         
         const config = {
@@ -238,8 +23,9 @@ async function startScanner() {
             aspectRatio: 1. 0
         };
         
+        // Try back camera first (environment)
         await html5QrCode.start(
-            { facingMode: "environment" }, // Use back camera
+            { facingMode: "environment" },
             config,
             onScanSuccess,
             onScanError
@@ -247,41 +33,54 @@ async function startScanner() {
         
         isScanning = true;
         startBtn. style.display = 'none';
-        stopBtn.style. display = 'inline-block';
+        stopBtn.style.display = 'inline-block';
+        console.log('Scanner started successfully');
         
     } catch (err) {
-        console.error('Error starting scanner:', err);
+        console.error('Error starting scanner with back camera:', err);
+        
+        // Try front camera if back camera fails
+        try {
+            await html5QrCode. start(
+                { facingMode: "user" },
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0
+                },
+                onScanSuccess,
+                onScanError
+            );
+            
+            isScanning = true;
+            startBtn.style. display = 'none';
+            stopBtn.style.display = 'inline-block';
+            console. log('Scanner started with front camera');
+            return;
+            
+        } catch (frontErr) {
+            console.error('Error starting scanner with front camera:', frontErr);
+        }
         
         // Show user-friendly error message
         let errorMessage = 'Could not start camera.  ';
         
-        if (err. name === 'NotAllowedError') {
-            errorMessage += 'Please allow camera access in your browser settings.';
-        } else if (err. name === 'NotFoundError') {
-            errorMessage += 'No camera found on this device.';
-        } else if (err. name === 'NotReadableError') {
-            errorMessage += 'Camera is being used by another application.';
+        if (err.name === 'NotAllowedError' || err.message.includes('Permission')) {
+            errorMessage = '📷 Camera permission denied. Please allow camera access:\n\n';
+            errorMessage += '1. Click the lock/camera icon in your browser address bar\n';
+            errorMessage += '2. Set Camera to "Allow"\n';
+            errorMessage += '3.  Refresh the page and try again';
+        } else if (err.name === 'NotFoundError') {
+            errorMessage = '📷 No camera found on this device. ';
+        } else if (err.name === 'NotReadableError') {
+            errorMessage = '📷 Camera is being used by another app.  Close other apps using the camera and try again.';
         } else if (err.name === 'OverconstrainedError') {
-            // Try front camera if back camera fails
-            try {
-                await html5QrCode. start(
-                    { facingMode: "user" },
-                    config,
-                    onScanSuccess,
-                    onScanError
-                );
-                isScanning = true;
-                startBtn. style.display = 'none';
-                stopBtn.style. display = 'inline-block';
-                return;
-            } catch (e) {
-                errorMessage += 'Camera not available. ';
-            }
+            errorMessage = '📷 Camera not available. Please try a different device.';
         } else {
-            errorMessage += err.message || 'Unknown error occurred.';
+            errorMessage += err.message || 'Please check camera permissions and try again. ';
         }
         
-        showResult('error', '❌ Camera Error', errorMessage);
+        showResultMessage('error', '❌ Camera Error', errorMessage);
     }
 }
 
@@ -289,102 +88,103 @@ async function startScanner() {
 async function stopScanner() {
     if (html5QrCode && isScanning) {
         try {
-            await html5QrCode. stop();
+            await html5QrCode.stop();
+            html5QrCode. clear();
             isScanning = false;
-            startBtn. style.display = 'inline-block';
-            stopBtn. style.display = 'none';
+            startBtn.style.display = 'inline-block';
+            stopBtn.style.display = 'none';
+            console.log('Scanner stopped');
         } catch (err) {
-            console. error('Error stopping scanner:', err);
+            console.error('Error stopping scanner:', err);
         }
     }
 }
 
 // Handle successful QR scan
 async function onScanSuccess(decodedText, decodedResult) {
+    console.log('QR Code scanned:', decodedText);
+    
+    // Play success beep
+    playBeep();
+    
     // Pause scanning while processing
     if (html5QrCode && isScanning) {
-        await html5QrCode. pause();
+        html5QrCode. pause(true);
     }
     
-    // Play beep sound
-    playSound('success');
-    
-    // Validate the ticket
-    await validateTicket(decodedText);
+    // Validate the ticket using your LocalStorage database
+    validateTicket(decodedText);
     
     // Resume scanning after 3 seconds
-    setTimeout(async () => {
+    setTimeout(() => {
         if (html5QrCode && isScanning) {
             try {
-                await html5QrCode. resume();
+                html5QrCode.resume();
             } catch (e) {
-                console.log('Scanner already running');
+                console.log('Could not resume scanner:', e);
             }
         }
     }, 3000);
 }
 
-// Handle scan errors (fires continuously when no QR in view - ignore)
+// Handle scan errors (fires continuously when no QR in view - normal behavior)
 function onScanError(error) {
-    // Silently ignore - this is normal when no QR code is visible
+    // Silently ignore - this fires continuously when no QR code is visible
 }
 
-// Validate ticket against Firebase
-async function validateTicket(ticketId) {
-    showResult('loading', '⏳ Checking... ', 'Validating ticket...');
+// Validate ticket against LocalStorage database
+function validateTicket(ticketId) {
+    showResultMessage('loading', '⏳ Checking... ', 'Validating ticket...');
     
     try {
-        // Check if ticket exists
-        const ticketRef = db.collection('tickets').doc(ticketId);
-        const ticketDoc = await ticketRef. get();
+        // Use your existing database functions from shared/database.js
+        const ticket = findTicketById(ticketId) || findTicketBySecret(ticketId);
         
-        if (!ticketDoc.exists) {
-            playSound('error');
-            showResult('error', '❌ INVALID TICKET', 'This ticket does not exist in the system.');
+        if (!ticket) {
+            playErrorSound();
+            showResultMessage('error', '❌ INVALID TICKET', 'This ticket does not exist in the system.');
+            addScanLog(ticketId, 'INVALID');
             return;
         }
         
-        const ticketData = ticketDoc.data();
-        
-        // Check if already scanned
-        if (ticketData. scanned || ticketData.used) {
-            playSound('error');
-            const scannedTime = ticketData.scannedAt?. toDate() || ticketData.usedAt?.toDate();
-            showResult('warning', '⚠️ ALREADY SCANNED', 
-                `This ticket was already scanned${scannedTime ?  ' on ' + formatDateTime(scannedTime) : ''}. `,
-                ticketData
+        // Check if already used
+        if (ticket.status === 'USED') {
+            playErrorSound();
+            const scannedTime = ticket.scannedAt ?  new Date(ticket. scannedAt). toLocaleString() : 'Unknown time';
+            showResultMessage('warning', '⚠️ ALREADY SCANNED', 
+                `This ticket was already used on ${scannedTime}`,
+                ticket
             );
+            addScanLog(ticketId, 'DUPLICATE');
+            addFraudAttempt('Duplicate scan attempt', { ticketId: ticketId, originalScan: ticket.scannedAt });
             return;
         }
         
-        // Mark ticket as scanned/used
-        await ticketRef.update({
-            scanned: true,
-            used: true,
-            scannedAt: firebase.firestore. FieldValue.serverTimestamp(),
-            usedAt: firebase. firestore.FieldValue.serverTimestamp(),
-            scannedBy: getCurrentUser()?. email || 'gate-scanner'
-        });
+        // Mark ticket as used
+        const success = markTicketAsUsed(ticket.id);
         
-        playSound('success');
-        showResult('success', '✅ VALID TICKET', 'Entry Approved!', ticketData);
-        
-        // Add to recent scans
-        addRecentScan(ticketData, ticketId);
-        
-        // Refresh stats
-        refreshGateStats();
+        if (success) {
+            playBeep();
+            showResultMessage('success', '✅ VALID TICKET', 'Entry Approved!', ticket);
+            addRecentScan(ticket);
+            refreshGateStats();
+        } else {
+            playErrorSound();
+            showResultMessage('error', '❌ ERROR', 'Could not validate ticket.  Please try again.');
+        }
         
     } catch (error) {
         console.error('Error validating ticket:', error);
-        playSound('error');
-        showResult('error', '❌ ERROR', 'Could not validate ticket. Please try again.');
+        playErrorSound();
+        showResultMessage('error', '❌ ERROR', 'Could not validate ticket. Please try again.');
     }
 }
 
-// Show result card
-function showResult(type, title, message, ticketData = null) {
-    resultCard.style.display = 'block';
+// Show result message
+function showResultMessage(type, title, message, ticketData = null) {
+    if (! resultCard || !resultContent) return;
+    
+    resultCard. style.display = 'block';
     
     let bgColor, textColor;
     switch(type) {
@@ -408,17 +208,15 @@ function showResult(type, title, message, ticketData = null) {
     let html = `
         <div style="background: ${bgColor}; color: ${textColor}; padding: 20px; border-radius: 10px; text-align: center;">
             <h2 style="margin-bottom: 10px; font-size: 1.5rem;">${title}</h2>
-            <p style="margin-bottom: 15px;">${message}</p>
+            <p style="margin-bottom: 15px; white-space: pre-line;">${message}</p>
     `;
     
     if (ticketData) {
         html += `
             <div style="background: rgba(255,255,255,0.7); padding: 15px; border-radius: 8px; text-align: left; margin-top: 10px;">
-                <p><strong>👤 Name:</strong> ${ticketData.name || ticketData.customerName || 'N/A'}</p>
-                <p><strong>📧 Email:</strong> ${ticketData. email || ticketData.customerEmail || 'N/A'}</p>
-                <p><strong>📞 Phone:</strong> ${ticketData. phone || ticketData.customerPhone || 'N/A'}</p>
-                <p><strong>🎫 Ticket Type:</strong> ${ticketData.ticketType || ticketData.type || 'Standard'}</p>
-                <p><strong>💰 Amount:</strong> UGX ${(ticketData.amount || ticketData. price || 0).toLocaleString()}</p>
+                <p><strong>🎫 Ticket ID:</strong> ${ticketData. id || 'N/A'}</p>
+                <p><strong>💰 Price:</strong> UGX ${(ticketData.price || 0).toLocaleString()}</p>
+                <p><strong>📅 Status:</strong> ${ticketData.status || 'N/A'}</p>
             </div>
         `;
     }
@@ -429,29 +227,31 @@ function showResult(type, title, message, ticketData = null) {
     // Auto-hide after 5 seconds for success
     if (type === 'success') {
         setTimeout(() => {
-            resultCard.style.display = 'none';
+            if (resultCard) resultCard.style.display = 'none';
         }, 5000);
     }
 }
 
 // Add to recent scans list
-function addRecentScan(ticketData, ticketId) {
+function addRecentScan(ticketData) {
+    if (!recentScans) return;
+    
     const scanItem = document.createElement('div');
     scanItem. className = 'scan-item';
     scanItem.style.cssText = 'padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;';
     
     scanItem.innerHTML = `
         <div>
-            <strong>${ticketData. name || ticketData.customerName || 'Guest'}</strong>
+            <strong>Ticket: ${ticketData.id. substring(0, 8)}...</strong>
             <br>
-            <small style="color: #888;">${ticketData.ticketType || 'Standard'} - ${new Date(). toLocaleTimeString()}</small>
+            <small style="color: #888;">UGX ${(ticketData.price || 0).toLocaleString()} - ${new Date(). toLocaleTimeString()}</small>
         </div>
         <span style="color: #28a745; font-size: 1.5rem;">✅</span>
     `;
     
     // Remove "no scans" message if present
     const noScansMsg = recentScans.querySelector('p');
-    if (noScansMsg) {
+    if (noScansMsg && noScansMsg. textContent. includes('No scans yet')) {
         recentScans.innerHTML = '';
     }
     
@@ -465,65 +265,86 @@ function addRecentScan(ticketData, ticketId) {
 }
 
 // Refresh gate statistics
-async function refreshGateStats() {
+function refreshGateStats() {
     try {
-        const ticketsSnapshot = await db.collection('tickets').get();
-        let total = 0;
-        let scanned = 0;
+        // Use your existing getStats function from shared/database.js
+        const stats = getStats();
         
-        ticketsSnapshot. forEach(doc => {
-            const data = doc.data();
-            if (data.status === 'sold' || data.paid) {
-                total++;
-            }
-            if (data.scanned || data.used) {
-                scanned++;
-            }
-        });
-        
-        scannedCount.textContent = scanned;
-        totalTicketsEl.textContent = total;
+        if (scannedCountEl) scannedCountEl. textContent = stats. used || 0;
+        if (totalTicketsEl) totalTicketsEl.textContent = stats.sold || stats.generated || 0;
         
     } catch (error) {
         console. error('Error refreshing stats:', error);
     }
 }
 
-// Play sound
-function playSound(type) {
+// Play success beep sound
+function playBeep() {
     try {
-        const sound = document.getElementById(type + 'Sound');
-        if (sound) {
-            sound.currentTime = 0;
-            sound.play(). catch(e => console.log('Sound play failed:', e));
+        const successSound = document.getElementById('successSound');
+        if (successSound) {
+            successSound. currentTime = 0;
+            successSound. play(). catch(e => console.log('Sound play failed:', e));
+            return;
         }
+        
+        // Fallback: generate beep using Web Audio API
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency. value = 800;
+        oscillator.type = 'sine';
+        gainNode.gain.value = 0.3;
+        
+        oscillator.start();
+        oscillator. stop(audioContext. currentTime + 0.15);
     } catch (e) {
-        console.log('Sound error:', e);
+        console.log('Could not play beep:', e);
     }
 }
 
-// Format date/time
-function formatDateTime(date) {
-    if (!date) return 'N/A';
-    return new Intl.DateTimeFormat('en-US', {
-        dateStyle: 'medium',
-        timeStyle: 'short'
-    }).format(date);
+// Play error sound
+function playErrorSound() {
+    try {
+        const errorSound = document.getElementById('errorSound');
+        if (errorSound) {
+            errorSound.currentTime = 0;
+            errorSound. play().catch(e => console.log('Sound play failed:', e));
+            return;
+        }
+        
+        // Fallback: generate error beep
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency. value = 300;
+        oscillator.type = 'sine';
+        gainNode.gain.value = 0.3;
+        
+        oscillator.start();
+        oscillator. stop(audioContext. currentTime + 0.3);
+    } catch (e) {
+        console.log('Could not play error sound:', e);
+    }
 }
 
-// Get current logged in user
-function getCurrentUser() {
-    // This should come from your auth. js
-    if (typeof firebase !== 'undefined' && firebase.auth) {
-        return firebase.auth().currentUser;
-    }
-    return null;
-}
-
-// Cleanup on page unload
-window.addEventListener('beforeunload', () => {
-    if (html5QrCode && isScanning) {
-        html5QrCode. stop();
-    }
+// Initialize on page load
+document. addEventListener('DOMContentLoaded', function() {
+    console.log('Gate scanner page loaded');
+    refreshGateStats();
 });
 
+// Cleanup on page unload
+window. addEventListener('beforeunload', function() {
+    if (html5QrCode && isScanning) {
+        html5QrCode. stop(). catch(e => console.log('Cleanup error:', e));
+    }
+});
