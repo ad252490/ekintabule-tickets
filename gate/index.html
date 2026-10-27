@@ -1,81 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1. 0">
-    <title>Gate Scanner - EKINTABULE</title>
-    <link rel="stylesheet" href="../shared/styles.css">
-    <link rel="stylesheet" href="style.css">
-    
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic. com/firebasejs/9.22. 0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    
-    <!-- QR Scanner -->
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-</head>
-<body>
-    <div class="header">
-        <div>
-            <h1>🚪 GATE SCANNER</h1>
-            <span class="subtitle">EKINTABULE Kya Christmas</span>
-        </div>
-        <button class="btn btn-secondary" onclick="logout()">🚪 Logout</button>
-    </div>
-
-    <div class="container">
-        <div class="card scanner-card">
-            <div class="card-header">📷 Scan Ticket QR Code</div>
-            <div id="scanner-container">
-                <div id="reader"></div>
-            </div>
-            <div class="scanner-controls">
-                <button class="btn btn-primary" id="startBtn" onclick="startScanner()">📷 Start Camera</button>
-                <button class="btn btn-danger" id="stopBtn" onclick="stopScanner()" style="display: none;">⏹️ Stop Camera</button>
-            </div>
-        </div>
-
-        <div class="card result-card" id="resultCard" style="display: none;">
-            <div id="resultContent"></div>
-        </div>
-
-        <div class="stats-grid">
-            <div class="stat-box success">
-                <div class="number" id="scannedCount">0</div>
-                <div class="label">✅ Scanned In</div>
-            </div>
-            <div class="stat-box">
-                <div class="number" id="totalTickets">0</div>
-                <div class="label">🎫 Total Sold</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">🕐 Recent Scans</div>
-            <div id="recentScans">
-                <p style="color: #888; text-align: center;">No scans yet. Start scanning tickets!</p>
-            </div>
-        </div>
-    </div>
-
-    <audio id="successSound" preload="auto">
-        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2Onp6ciHlxe4eTn5+YjHt0e4iWoJ+WiXt1fIqZop+UhHh2foycoZ2Qf3V4gI+eoJuLfHV6hJOen5iFd3Z8i5mgnZB+dHmEk5+gmIV2dnuLmZ+ckX50eYWUn5+Xg3V2fIyZn5yQfXR5hZSfn5eDdXZ8jJmfnJB9dHmFlJ+fl4N1dnyMmZ+ckH10eYWUn5+Xg3V2fIyZn5yQfXR5hZSfn5eDdXZ8jJmfnJB9dA==" type="audio/wav">
-    </audio>
-    <audio id="errorSound" preload="auto">
-        <source src="data:audio/wav;base64,UklGRl9vAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTtvAACA/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/gP+A/4D/" type="audio/wav">
-    </audio>
-
-    <script src="../shared/auth.js"></script>
-    <script src="../shared/security.js"></script>
-    <script src="../shared/database.js"></script>
-    <script src="gate.js"></script>
-    <script>
-        if (!checkAuth('gate')) {
-            window.location.href = '../index.html';
-        }
-        document.addEventListener('DOMContentLoaded', function() {
-            refreshGateStats();
-        });
-    </script>
-</body>
-</html>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1a0a0a"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon.svg">
+<title>EKINTABULE Gate</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#1a0a0a;color:#fff;font-family:system-ui,sans-serif;min-height:100vh;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.wrap{max-width:480px;margin:0 auto;padding:16px;text-align:center}h1{color:#FFD700;font-size:22px}
+input,button{width:100%;padding:16px;border-radius:12px;border:2px solid #8B4513;font-size:20px;margin-top:12px}
+input{background:#000;color:#fff;text-align:center;letter-spacing:8px}button{background:linear-gradient(135deg,#FF6B35,#FFD700);color:#1a0a0a;font-weight:700;border:0;cursor:pointer}
+button.ghost{background:transparent;color:#FFD700;border:1px solid #FFD700;font-size:14px;padding:10px;width:auto}
+#reader{border-radius:12px;overflow:hidden;margin-top:12px}.bar{display:flex;justify-content:space-between;align-items:center;color:#aaa;font-size:14px}
+#result{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;z-index:9}
+#result h2{font-size:42px;margin:0 0 8px}#result p{font-size:20px;margin:4px 0}#result small{margin-top:28px;opacity:.8}
+.ok{background:#157f3b}.bad{background:#b3261e}.warn{background:#b7791f}.wait{background:#333}
+#err{color:#ff7b7b;min-height:22px;margin-top:10px}#off{display:none;background:#b7791f;padding:8px}
+</style></head><body>
+<div id="off">📡 No connection – scanning is paused. Do NOT admit by guess.</div>
+<div class="wrap" id="lock"><h1>🎄 EKINTABULE Gate</h1><p>Enter staff PIN</p>
+ <input id="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="••••••"><button id="unlock">Unlock</button><div id="err"></div></div>
+<div class="wrap" id="app" style="display:none"><h1>🎫 Scan Tickets</h1>
+ <div class="bar"><span>Admitted this session: <b id="count">0</b></span><button class="ghost" id="lockBtn">🔒 Lock</button></div>
+ <div id="reader"></div><button id="startBtn">📷 Start Scanner</button></div>
+<div id="result" onclick="this.style.display='none';resume()"></div>
+<script src="../shared/firebase-config.js"></script><script src="gate.js"></script>
+<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js')</script>
+</body></html>

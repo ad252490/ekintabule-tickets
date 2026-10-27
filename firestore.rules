@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() { return request.auth != null && request.auth.token.email == 'admin@ekintabule.app'; }
+    function isGate()  { return request.auth != null && request.auth.token.email == 'gate@ekintabule.app'; }
+
+    // Public QR lookup: a client can read ONE doc if they hold the unguessable token. No listing.
+    match /qr/{token} {
+      allow get: if true;
+      allow list, create, delete: if isAdmin();
+      allow update: if isGate() && resource.data.used == false && request.resource.data.used == true
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['used','usedAt']);
+    }
+    match /tickets/{id} {
+      allow read: if isAdmin() || isGate();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (isGate() && resource.data.status != 'USED' && request.resource.data.status == 'USED'
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','scanned','used','scannedAt','scannedBy']));
+    }
+    match /scanLogs/{id} {
+      allow create: if isGate() || isAdmin();
+      allow read: if isAdmin();
+    }
+  }
+}

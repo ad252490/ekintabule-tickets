@@ -3,146 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - EKINTABULE</title>
-    <link rel="stylesheet" href="../shared/styles.css">
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <title>EKINTABULI | Admin Command Center</title>
+    
+    <!-- Libraries -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="header">
-        <div>
-            <h1>👑 ADMIN DASHBOARD</h1>
-            <span class="subtitle">EKINTABULE Kya Christmas</span>
+
+    <div class="navbar">
+        <div class="brand">
+            EKINTABULI 
+            <span style="color:#fff; font-size:12px; opacity:0.7;">ADMIN</span>
         </div>
-        <div>
-            <span style="color: #ccc; margin-right: 15px;">📅 25th Dec 2025 | 📍 Club Missouka</span>
-            <button class="btn btn-secondary" onclick="logout()">🚪 Logout</button>
+        <div id="connectionStatus" class="connection-status">
+            <div class="status-dot"></div>
+            <span class="status-text">Connecting...</span>
         </div>
+        <button id="logoutBtn" class="btn-secondary">Log Out</button>
     </div>
 
     <div class="container">
+        <div id="livePanel"></div>
+        
+        <!-- Real-Time Stats -->
         <div class="stats-grid">
-            <div class="stat-box">
-                <div class="number" id="statGenerated">0</div>
-                <div class="label">📦 Generated</div>
+            <!-- Row 1: Ticket Status & Revenue -->
+            <div class="card card-total">
+                <div class="stat-label">Total Tickets</div>
+                <div class="stat-value" id="statGenerated">0</div>
+                <div class="stat-caption">Overall capacity minted</div>
             </div>
-            <div class="stat-box">
-                <div class="number" id="statDownloaded">0</div>
-                <div class="label">📥 Downloaded</div>
+            <div class="card card-sold">
+                <div class="stat-label">Tickets Sold</div>
+                <div class="stat-value" id="statSold">0</div>
+                <div class="stat-caption">Valid for entry (SOLD + USED)</div>
             </div>
-            <div class="stat-box">
-                <div class="number" id="statSold">0</div>
-                <div class="label">💰 Sold</div>
+            <div class="card card-used">
+                <div class="stat-label">Checked In</div>
+                <div class="stat-value" id="statUsed">0</div>
+                <div class="stat-caption" id="attendanceRate">0% Attendance</div>
             </div>
-            <div class="stat-box success">
-                <div class="number" id="statUsed">0</div>
-                <div class="label">✅ Scanned</div>
+            <div class="card card-revenue">
+                <div class="stat-label">Total Revenue</div>
+                <div class="stat-value" id="statRevenue">0</div>
+                <div class="stat-caption">UGX collected</div>
             </div>
-            <div class="stat-box warning">
-                <div class="number" id="statRevenue">0</div>
-                <div class="label">💵 Revenue (UGX)</div>
+
+            <!-- Row 2: Download / Printing Stats -->
+            <div class="card card-download">
+                <div class="stat-label">Tickets Downloaded</div>
+                <div class="stat-value" id="statDownloaded">0</div>
+                <div class="stat-caption">Front images exported (unique)</div>
             </div>
-            <div class="stat-box danger">
-                <div class="number" id="statFraud">0</div>
-                <div class="label">🚨 Fraud Blocked</div>
+            <div class="card card-download">
+                <div class="stat-label">Last Downloaded Range</div>
+                <div class="stat-value" id="statDownloadedRange">—</div>
+                <div class="stat-caption">Ticket numbers in last ZIP</div>
+            </div>
+            <div class="card card-download">
+                <div class="stat-label">Download Progress</div>
+                <div class="stat-value" id="statDownloadProgress">0%</div>
+                <div class="stat-caption">Downloaded vs total</div>
+            </div>
+            <div class="card card-download">
+                <div class="stat-label">Remaining to Download</div>
+                <div class="stat-value" id="statRemainingToDownload">0</div>
+                <div class="stat-caption">Tickets not yet exported</div>
+            </div>
+
+            <!-- Row 3: Event Countdown & Charts -->
+            <div class="card card-countdown">
+                <div class="stat-label">Event Countdown</div>
+                <div class="stat-value countdown-main" id="statCountdown">—</div>
+                <div class="stat-caption" id="statCountdownSub">Time until 25 Dec 2025, 6:00 PM</div>
+            </div>
+
+            <div class="card card-chart">
+                <div class="stat-label">Ticket Status Breakdown</div>
+                <canvas id="statusChart"></canvas>
+            </div>
+
+            <div class="card card-chart" style="grid-column: 1 / -1;">
+                <div class="stat-label">Check-ins Over Time</div>
+                <canvas id="checkinChart"></canvas>
+            </div>
+
+            <!-- Row 4: Activity -->
+            <div class="card card-activity" style="grid-column: 1 / -1;">
+                <div class="stat-label">Recent Activity</div>
+                <ul id="activityList" class="activity-list">
+                    <!-- JS fills this -->
+                </ul>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header">🎫 Ticket Generation</div>
-            <div class="generation-controls">
-                <p style="margin-bottom: 15px; color: #ccc;">Generate 400 unique tickets with encrypted QR codes for EKINTABULE Kya Christmas.</p>
-                <div class="progress-bar" id="progressContainer" style="display: none;">
-                    <div class="fill" id="progressFill" style="width: 0%;"></div>
+        <!-- Action Bar -->
+        <div class="toolbar">
+            <div style="flex:1; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                <input type="number" id="ticketCount" placeholder="Qty" value="500" style="width:80px;">
+                <button id="generateBtn" class="btn-primary">⚡ Generate Tickets</button>
+                <button id="clearDbBtn" class="btn-danger">🗑️ Reset DB</button>
+                
+                <div style="width:1px; height:30px; background:#333; margin:0 10px;"></div>
+                
+                <button id="downloadPdfBtn" class="btn-secondary" disabled>📄 PDF (A4)</button>
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                    <button id="downloadZipBtn" class="btn-secondary" disabled>📦 ZIP</button>
+                    <span id="nextBatchHint" style="font-size:11px;color:#888;"></span>
                 </div>
-                <p id="progressText" style="text-align: center; margin: 10px 0; display: none;"></p>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button class="btn btn-primary" id="generateBtn" onclick="generateAllTickets()">🎫 Generate 400 Tickets</button>
-                    <button class="btn btn-secondary" id="downloadZipBtn" onclick="downloadAsZip()" disabled>📥 Download ZIP (PNG)</button>
-                    <button class="btn btn-secondary" id="downloadPdfBtn" onclick="downloadAsPdf()" disabled>📄 Download PDF</button>
+                <button id="exportBtn" class="btn-secondary" disabled>📊 Export CSV</button>
+
+                <button id="resetDownloadBtn" class="btn-secondary" style="margin-left:auto;">♻ Reset Downloads</button>
+            </div>
+            <div style="width:100%;">
+                <div id="progressContainer">
+                    <div id="progressFill"></div>
                 </div>
+                <div id="progressText" style="font-size:11px; color:#888; margin-top:5px; text-align:center;"></div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header">💰 Revenue Tracking</div>
-            <div class="revenue-grid">
-                <div class="revenue-item">
-                    <span class="revenue-label">Total Tickets:</span>
-                    <span class="revenue-value">400 × 10,000 UGX = <strong>4,000,000 UGX</strong></span>
-                </div>
-                <div class="revenue-item">
-                    <span class="revenue-label">Tickets Sold:</span>
-                    <span class="revenue-value" id="soldRevenue">0 × 10,000 UGX = 0 UGX</span>
-                </div>
-                <div class="revenue-item">
-                    <span class="revenue-label">Attendance:</span>
-                    <span class="revenue-value" id="attendanceRate">0 / 0 (0%)</span>
-                </div>
-                <div class="revenue-item highlight">
-                    <span class="revenue-label">💵 Expected Collection:</span>
-                    <span class="revenue-value" id="expectedCollection">0 UGX</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">📋 Ticket Management</div>
-            <div style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
-                <input type="text" id="searchTicket" placeholder="Search ticket ID..." style="padding: 10px; border-radius: 8px; border: 2px solid #8B4513; background: rgba(0,0,0,0.5); color: #fff; flex: 1; min-width: 200px;">
-                <select id="filterStatus" onchange="filterTickets()" style="padding: 10px; border-radius: 8px; border: 2px solid #8B4513; background: rgba(0,0,0,0.5); color: #fff;">
-                    <option value="all">All Status</option>
+        <!-- Data Table -->
+        <div class="table-container">
+            <div style="padding:15px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                <!-- SEARCH INPUT -->
+                <input type="text" id="searchTicket" placeholder="Search Ticket ID..." style="width:200px; background:#0f1015; color:white; border:1px solid #333; padding:8px; border-radius:4px;">
+                
+                <!-- STATUS FILTER -->
+                <select id="filterStatus" style="background:#0f1015; color:white; border:1px solid #333; padding:8px; border-radius:4px;">
+                    <option value="ALL">All Statuses</option>
                     <option value="GENERATED">Generated</option>
-                    <option value="DOWNLOADED">Downloaded</option>
                     <option value="SOLD">Sold</option>
-                    <option value="USED">Used</option>
+                    <option value="USED">Used (Checked In)</option>
                 </select>
-                <button class="btn btn-primary" onclick="exportReport()">📊 Export CSV</button>
-            </div>
-            <div style="overflow-x: auto;">
-                <table id="ticketTable">
-                    <thead>
-                        <tr>
-                            <th>Ticket ID</th>
-                            <th>Status</th>
-                            <th>Generated</th>
-                            <th>Scanned At</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ticketTableBody">
-                        <tr>
-                            <td colspan="5" style="text-align: center; color: #888;">No tickets generated yet. Click "Generate 400 Tickets" to start.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
 
-        <div class="card">
-            <div class="card-header">🔐 Security Log</div>
-            <div id="securityLog">
-                <p style="color: #888; text-align: center;">No security events recorded.</p>
+                <button id="refreshBtn" class="btn-secondary" style="padding:5px 10px; margin-left:auto;">🔄 Refresh</button>
             </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>TICKET ID</th>
+                        <th>STATUS</th>
+                        <th>PRICE</th>
+                        <th>ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody id="ticketTableBody">
+                    <tr><td colspan="4" style="text-align:center; padding:30px; color:#666;">Loading data...</td></tr>
+                </tbody>
+            </table>
+            <div id="pagination" style="padding:15px; text-align:center; color:#666; font-size:12px; display:flex; justify-content:center; gap:10px;"></div>
         </div>
     </div>
 
-    <div id="ticketCanvas" style="position: absolute; left: -9999px;"></div>
+    <!-- Notifications -->
+    <div id="notificationContainer"></div>
 
-    <script src="../shared/auth.js"></script>
-    <script src="../shared/security.js"></script>
-    <script src="../shared/database.js"></script>
-    <script src="admin.js"></script>
-    <script>
-        if (!checkAuth('admin')) {
-            window.location.href = '../index.html';
-        }
-        document.addEventListener('DOMContentLoaded', function() {
-            refreshDashboard();
-        });
-    </script>
+    <!-- Hidden Elements for Generation -->
+    <div id="ticketCanvas"></div>
+
+    <!-- Preview Modal -->
+    <div id="ticketPreviewModal" class="modal">
+        <div class="close-btn" id="closeModalBtn">&times;</div>
+        <div class="modal-content">
+            <h3 style="color:var(--gold); margin-bottom:20px;">Ticket Preview</h3>
+            <div id="ticketFrontPreview" style="margin-bottom:20px; display:inline-block;"></div>
+            <div id="ticketBackPreview" style="display:inline-block;"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../shared/firebase-config.js"></script>
+    <script src="../admin/admin.js"></script>
+    <script src="../admin/live.js"></script>
 </body>
 </html>
