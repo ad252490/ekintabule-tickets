@@ -46,9 +46,8 @@ let checkinChart = null;
 // ================================================
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const formatCurrency = n => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-const getVerifyUrl = () => 'https://YOUR-DOMAIN/verify/';
+const getVerifyUrl = () => 'https://ad252490.github.io/ekintabule-tickets/verify/';
 const getTicketLink = t => `${getVerifyUrl()}?t=${encodeURIComponent(t.encryptedCode)}`;
-
 function showNotification(msg, type='success') {
     const c = document.getElementById('notificationContainer');
     if(!c) return;
